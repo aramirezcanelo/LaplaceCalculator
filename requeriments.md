@@ -1,0 +1,3 @@
+sympy
+PyQt6
+PyQt6-WebEngine
