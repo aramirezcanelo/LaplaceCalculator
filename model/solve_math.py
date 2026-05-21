@@ -377,7 +377,7 @@ class SolverLaplace:
 
             pasos.append(
                 "<b>Soluci&oacute;n particular:</b> "
-                "<span style='color:#0f172a;font-weight:bold;'>$y(t) = "
+                "<span style='color:#60cdff;font-weight:bold;'>$y(t) = "
                 + sp.latex(y_t_expandido) + "$</span>"
             )
 
