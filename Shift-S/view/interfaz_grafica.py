@@ -58,6 +58,14 @@ PLANTILLA_WEB = """
     }});
   </script>
   <style>
+  /* Estilo de scrollbar nativo de Chromium (Escapado para Python .format) */
+    ::-webkit-scrollbar {{ width: 6px; }}
+    ::-webkit-scrollbar-track {{ background: transparent; }}
+    ::-webkit-scrollbar-thumb {{ 
+      background: rgba(255,255,255,0.15); 
+      border-radius: 3px; 
+    }}
+    ::-webkit-scrollbar-thumb:hover {{ background: rgba(255,255,255,0.25); }}
     #MathJax_ProcessMessage {{ display:none !important; }}
     .MathJax_SVG_Display {{ overflow-x: auto; }}
     html, body {{
@@ -370,39 +378,22 @@ class InterfazCalculadora(QWidget):
         self.lbl_res = QLabel("RESULTADO")
         main_layout.addWidget(self.lbl_res)
 
-        # FIX SCROLL REAL: QWebEngineView dentro de QScrollArea.
-        # El web_view crece libremente en altura según su contenido (contentsSizeChanged),
-        # y el QScrollArea provee la barra de scroll, igual que QListWidget lo hace
-        # internamente para el historial.
         self.web_view = QWebEngineView()
         self.web_view.page().setBackgroundColor(QColor("#252525"))
         self.web_view.setStyleSheet("background-color: #252525;")
         self.web_view.settings().setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled, True)
         self.web_view.settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
-        # Sin altura fija: el widget se redimensiona solo al cambiar el contenido HTML
-        self.web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
+        # NUEVA CONFIGURACIÓN CORRECTA:
+        self.web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.web_view.setMinimumHeight(80)
-        self.web_view.setMaximumHeight(16777215)  # sin tope
-        # Cuando el contenido HTML cambia de tamaño, ajustar la altura del widget
-        self.web_view.page().contentsSizeChanged.connect(self._ajustar_altura_web)
 
-        self.scroll_resultado = QScrollArea()
-        self.scroll_resultado.setWidget(self.web_view)
-        self.scroll_resultado.setWidgetResizable(True)
-        self.scroll_resultado.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_resultado.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.scroll_resultado.setStyleSheet(
-            "QScrollArea { border: none; background: transparent; }"
-            "QScrollBar:vertical { width: 6px; background: transparent; }"
-            "QScrollBar::handle:vertical { background: rgba(255,255,255,0.15); border-radius: 3px; }"
-            "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }"
-        )
-        self.scroll_resultado.setMinimumHeight(80)
-        self.scroll_resultado.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-
+        # Aplicamos el efecto de opacidad directamente al web_view
         self.fade_effect = QGraphicsOpacityEffect(self)
-        self.scroll_resultado.setGraphicsEffect(self.fade_effect)
-        main_layout.addWidget(self.scroll_resultado, stretch=2)
+        self.web_view.setGraphicsEffect(self.fade_effect)
+        
+        # Agregamos el web_view directo al layout, sin QScrollArea
+        main_layout.addWidget(self.web_view, stretch=2)
 
         # ── Historial ─────────────────────────────────────────────────────────
         self.lbl_historial = QLabel("HISTORIAL")
@@ -437,13 +428,6 @@ class InterfazCalculadora(QWidget):
             contenido=contenido,
         )
         self.web_view.setHtml(html)
-
-    def _ajustar_altura_web(self, size):
-        """Redimensiona el QWebEngineView a la altura real del contenido HTML.
-        El QScrollArea que lo contiene provee el scroll cuando ese alto
-        supera el espacio disponible, igual que QListWidget con sus ítems."""
-        alto = max(80, int(size.height()) + 20)  # +20 padding inferior
-        self.web_view.setFixedHeight(alto)
 
     def mostrar_html(self, html_str: str):
         import re

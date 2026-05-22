@@ -8,13 +8,13 @@ from view.utilidades_html import generar_html
 class ControladorCalculadora:
     def __init__(self):
         self.view = InterfazCalculadora()
-        self.modelo = SolverLaplace()
+        self.model = SolverLaplace()
         
         self.view.btn_ir.clicked.connect(self.ejecutar_calculo)
         self.view.entry.returnPressed.connect(self.ejecutar_calculo)
         self.view.historial_list.itemClicked.connect(self.cargar_historial)
         
-        self.view.btn_limpiar.clicked.connect(self.limpiar_pantalla)
+        self.view.btn_limpiar_todo.clicked.connect(self.limpiar_pantalla)
 
         self.view.mostrar_html(generar_html("<h3>F(s) = </h3>"))
 
@@ -25,7 +25,7 @@ class ControladorCalculadora:
             
         self.view.animar_calculo()
         
-        estado, resultado_html = self.modelo.procesar_expresion(texto_entrada)
+        estado, resultado_html = self.model.procesar_expresion(texto_entrada)
         
         if estado == "inversa":
             self.view.lbl_res.setText("Estado: Operación No Soportada")
